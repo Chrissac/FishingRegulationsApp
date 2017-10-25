@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "453815090133",
+    "firebase_url": "https://regulationsfishingapp.firebaseio.com",
+    "project_id": "regulationsfishingapp",
+    "storage_bucket": "regulationsfishingapp.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:453815090133:android:4778a7e9a6bd52b2",
+        "android_client_info": {
+          "package_name": "com.regulationfishing.csacripante.fishingregulationsapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "453815090133-imdtdqtadn3uvpu8i785uj1bbdhg3avn.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.regulationfishing.csacripante.fishingregulationsapp",
+            "certificate_hash": "e4bbe5b7a4c1eb55652965aee885dd59bd2ee7f4"
+          }
+        },
+        {
+          "client_id": "453815090133-i632pd5h4u9l3pv4dsgjfqvrpecodmp8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBGRa59_3DGWF8bsCD-2VirBpHtXECSuIk"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "453815090133-i632pd5h4u9l3pv4dsgjfqvrpecodmp8.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
