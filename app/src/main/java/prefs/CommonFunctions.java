@@ -1,15 +1,33 @@
 package prefs;
 
+import android.os.AsyncTask;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.UUID;
 /**
  * Created by csacripante on 20/07/2017.
  */
 
 public class CommonFunctions {
+    private static final String PLACES_API_BASE = "https://maps.googleapis.com/maps/api/place";
+    private static final String TYPE_AUTOCOMPLETE = "/autocomplete";
+    private static final String TYPE_DETAIL = "/details";
+    private static final String OUT_JSON = "/json";
+    private static final String API_KEY = "AIzaSyD7bf9O7_kTD1BuNVM9X4Zk5OKTfvAJRq0";
     public static String PassWordMd5(String s)
     {
         MessageDigest digest;

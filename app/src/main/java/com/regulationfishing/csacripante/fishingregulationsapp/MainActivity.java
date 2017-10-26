@@ -4,31 +4,23 @@ import android.*;
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
-import com.squareup.picasso.Transformation;
 
-
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.location.Criteria;
 import android.location.Location;
-import android.location.LocationManager;
-import android.location.LocationProvider;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 
+import android.os.StrictMode;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.app.AlertDialog;
+
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 
@@ -45,36 +37,38 @@ import com.facebook.Profile;
 import com.facebook.internal.ImageRequest;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
-import com.google.android.gms.maps.model.Marker;
+
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.util.List;
 
 import info.android.sqlite.helper.DatabaseHelper;
 import info.android.sqlite.helper.users;
-import prefs.UserInfo;
-
-
+import prefs.CommonFunctions;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 
@@ -82,20 +76,11 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.app.Activity;
-import android.content.Context;
-import android.os.Bundle;
-import android.util.Log;
-import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
-import android.widget.AutoCompleteTextView;
 import android.widget.Filter;
 import android.widget.Filterable;
-import android.widget.Toast;
-
-import com.regulationfishing.csacripante.fishingregulationsapp.R;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
@@ -123,9 +108,10 @@ public class MainActivity extends AppCompatActivity
     private static final String LOG_TAG = "Google Places Autocomplete";
     private static final String PLACES_API_BASE = "https://maps.googleapis.com/maps/api/place";
     private static final String TYPE_AUTOCOMPLETE = "/autocomplete";
+    private static final String TYPE_DETAIL = "/details";
     private static final String OUT_JSON = "/json";
     private static final String API_KEY = "AIzaSyD7bf9O7_kTD1BuNVM9X4Zk5OKTfvAJRq0";
-
+    private  static  ArrayList locationPlaces = null;
 
 
     @Override
@@ -134,6 +120,8 @@ public class MainActivity extends AppCompatActivity
 
 
         setContentView(R.layout.activity_main);
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
@@ -162,15 +150,11 @@ public class MainActivity extends AppCompatActivity
         autoCompView.setAdapter(new GooglePlacesAutocompleteAdapter(this, R.layout.list_item));
         autoCompView.setOnItemClickListener(this);
 
-
-
         List<users> allUsers =    db.getAllUsers();
         for (users userObj : allUsers) {
             String userNameBeforeDash = userObj.getUserName().toString().split("-")[0];
             navUsername.setText(userNameBeforeDash);
             navEmail.setText(userObj.getEmail().toString());
-
-
 
             Uri profilePictureUri = ImageRequest.getProfilePictureUri(Profile.getCurrentProfile().getId(), 120 , 120 );
 
@@ -433,7 +417,7 @@ public class MainActivity extends AppCompatActivity
 
     public static ArrayList autocomplete(String input) {
         ArrayList resultList = null;
-
+        locationPlaces = new ArrayList();
         HttpURLConnection conn = null;
         StringBuilder jsonResults = new StringBuilder();
         try {
@@ -445,23 +429,15 @@ public class MainActivity extends AppCompatActivity
             URL url = new URL(sb.toString());
             conn = (HttpURLConnection) url.openConnection();
             InputStreamReader in = new InputStreamReader(conn.getInputStream());
-
             // Load the results into a StringBuilder
             int read;
             char[] buff = new char[1024];
             while ((read = in.read(buff)) != -1) {
                 jsonResults.append(buff, 0, read);
             }
-        } catch (MalformedURLException e) {
+        } catch (Exception e) {
 
             return resultList;
-        } catch (IOException e) {
-
-            return resultList;
-        } finally {
-            if (conn != null) {
-                conn.disconnect();
-            }
         }
 
         try {
@@ -471,28 +447,77 @@ public class MainActivity extends AppCompatActivity
 
             // Extract the Place descriptions from the results
             resultList = new ArrayList(predsJsonArray.length());
+
             for (int i = 0; i < predsJsonArray.length(); i++) {
-                System.out.println(predsJsonArray.getJSONObject(i).getString("description"));
-                System.out.println("============================================================");
                 resultList.add(predsJsonArray.getJSONObject(i).getString("description"));
+                locationPlaces.add(predsJsonArray.getJSONObject(i).getString("place_id"));
             }
         } catch (JSONException e) {
 
         }
-
         return resultList;
     }
 
     @Override
     public void onItemClick(AdapterView adapterView, View view, int position, long id) {
         String str = (String) adapterView.getItemAtPosition(position);
+        str = (String)locationPlaces.get(position).toString();
         Toast.makeText(this, str, Toast.LENGTH_SHORT).show();
+        CommonFunctions pl = new CommonFunctions();
+
+        ArrayList<Double> list = new ArrayList<Double>();
+        ArrayList<Double> resultList = null;
+
+        HttpURLConnection conn = null;
+        StringBuilder jsonResults = new StringBuilder();
+        try {
+
+
+            StringBuilder sb = new StringBuilder(PLACES_API_BASE + TYPE_DETAIL + OUT_JSON);
+            sb.append("?placeid=" + URLEncoder.encode(str, "utf8"));
+            sb.append("&key=" + API_KEY);
+
+            URL url = new URL(sb.toString());
+            conn = (HttpURLConnection) url.openConnection();
+            InputStreamReader in = new InputStreamReader(conn.getInputStream());
+            int read;
+            char[] buff = new char[1024];
+            while ((read = in.read(buff)) != -1) {
+                jsonResults.append(buff, 0, read);
+            }
+
+
+
+        } catch (UnsupportedEncodingException e1) {
+            e1.printStackTrace();
+        } catch (MalformedURLException e1) {
+            e1.printStackTrace();
+        } catch (IOException e1) {
+            e1.printStackTrace();
+        }
+
+        try {
+
+            JSONObject jsonObj = new JSONObject(jsonResults.toString());
+            //JSONArray predsJsonArray = jsonObj.getJSONArray("html_attributions");
+            JSONObject result = jsonObj.getJSONObject("result").getJSONObject("geometry").getJSONObject("location");
+            Double longitude  = result.getDouble("lng");
+            Double latitude =  result.getDouble("lat");
+            CameraPosition camPos = new CameraPosition.Builder()
+                    .target(new LatLng(latitude, longitude))
+                    .zoom(5)
+                    .build();
+            CameraUpdate camUpd3 = CameraUpdateFactory.newCameraPosition(camPos);
+            mMap.animateCamera(camUpd3);
+        } catch (JSONException e) {
+            ///Log.e(LOG_TAG, "Cannot process JSON results", e);
+        }
+
 
     }
 
     class GooglePlacesAutocompleteAdapter extends ArrayAdapter implements Filterable {
-        private ArrayList resultList;
-
+        ArrayList resultList;
         public GooglePlacesAutocompleteAdapter(Context context, int textViewResourceId) {
             super(context, textViewResourceId);
         }
@@ -517,8 +542,7 @@ public class MainActivity extends AppCompatActivity
                         // Retrieve the autocomplete results.
                         resultList = autocomplete(constraint.toString());
 
-                        // Assign the data to the FilterResults
-                        filterResults.values = resultList;
+                        // Assign the data to the FilterResultsfilterResults.values = resultList;
                         filterResults.count = resultList.size();
                     }
                     return filterResults;
@@ -536,5 +560,4 @@ public class MainActivity extends AppCompatActivity
             return filter;
         }
     }
-
 }
