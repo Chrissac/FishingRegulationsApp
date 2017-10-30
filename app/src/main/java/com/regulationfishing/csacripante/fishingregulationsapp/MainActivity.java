@@ -4,6 +4,7 @@ import android.*;
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
@@ -21,6 +22,7 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 
@@ -33,6 +35,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.toolbox.Volley;
 import com.facebook.Profile;
 import com.facebook.internal.ImageRequest;
 import com.google.android.gms.common.ConnectionResult;
@@ -57,13 +62,17 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
+import java.util.Iterator;
 import java.util.List;
 
 import info.android.sqlite.helper.DatabaseHelper;
 import info.android.sqlite.helper.users;
 import prefs.CommonFunctions;
+import prefs.GetGeoLocations;
+import prefs.LoginRequest;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -81,6 +90,8 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.Filter;
 import android.widget.Filterable;
+
+import static prefs.CommonFunctions.PassWordMd5;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
@@ -166,6 +177,7 @@ public class MainActivity extends AppCompatActivity
                     .transform(new CircleTransformation())
                     .into(ProfilePic);
         }
+        LoadGeoLocations();
     }
 
     @Override
@@ -177,6 +189,40 @@ public class MainActivity extends AppCompatActivity
             super.onBackPressed();
         }
     }
+    public  void LoadGeoLocations()
+    {
+        // Response received from the server
+        Response.Listener<String> responseListener = new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                try {
+                    //gets the response back from the server
+                    JSONObject jsonResponse = new JSONObject(response);
+
+
+                        JSONObject geoMappingsJSON = jsonResponse.getJSONObject("GeoLocations");
+                        JSONArray array = jsonResponse.names();
+
+                    Iterator<?> keys = jsonResponse.keys();
+                    while(keys.hasNext() ) {
+                        String key = (String)keys.next();
+                        if ( jsonResponse.get(key) instanceof JSONObject ) {
+                            JSONObject xx = new JSONObject(jsonResponse.get(key).toString());
+                            Log.d("res1",xx.getString("something"));
+                            Log.d("res2",xx.getString("something2"));
+                        }
+                    }
+
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        GetGeoLocations geoRequest = new GetGeoLocations(responseListener);
+        RequestQueue queue = Volley.newRequestQueue(MainActivity.this);
+        queue.add(geoRequest);
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -187,9 +233,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
+
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
@@ -229,8 +273,7 @@ public class MainActivity extends AppCompatActivity
     public void onMapReady(GoogleMap googleMap) {
 
         try {
-            // Customise the styling of the base map using a JSON object defined
-            // in a raw resource file.
+
             boolean success = googleMap.setMapStyle(
                     MapStyleOptions.loadRawResourceStyle(
                             this, R.string.style_json));
@@ -241,8 +284,7 @@ public class MainActivity extends AppCompatActivity
         } catch (Resources.NotFoundException e) {
 
         }
-        // Position the map's camera near Sydney, Australia.
-        googleMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(-34, 151)));
+
     }
 
 
@@ -291,13 +333,6 @@ public class MainActivity extends AppCompatActivity
                             .icon(BitmapDescriptorFactory.fromResource(R.drawable.fishingpole))
                             .snippet("Population: dont know google it."));
 
-/*
-                    googleMap.addMarker(new MarkerOptions()
-                            .position(new LatLng(43.70011, -79.4163))
-                            .title("Toronto")
-                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.fishingpole))
-                            .snippet("Lat: "+Double.toString(lat) + " Long: " + Double.toString(lng)));
-*/
 
                     if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION)
                             == PackageManager.PERMISSION_GRANTED) {
@@ -327,12 +362,6 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    /**
-     * This is where we can add markers or lines, add listeners or move the camera. In this case, we
-     * just add a marker near Africa.
-     * <p/>
-     * This should only be called once and when we are sure that {@link #mMap} is not null.
-     */
     private void setUpMap() {
         mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
     }
@@ -340,31 +369,12 @@ public class MainActivity extends AppCompatActivity
     private void handleNewLocation(Location location) {
         Log.d(TAG, location.toString());
 
-        double currentLatitude = location.getLatitude();
-        double currentLongitude = location.getLongitude();
-
-        LatLng latLng = new LatLng(currentLatitude, currentLongitude);
-
-        //mMap.addMarker(new MarkerOptions().position(new LatLng(currentLatitude, currentLongitude)).title("Current Location"));
-        MarkerOptions options = new MarkerOptions()
-                .position(latLng)
-                .icon(BitmapDescriptorFactory.fromResource(R.drawable.fishingpole))
-                .title("I am here!");
-        mMap.addMarker(options);
-
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
     }
 
     @Override
     public void onConnected(Bundle bundle) {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
+
             return;
         }
         Location location = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
@@ -383,12 +393,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
-        /*
-         * Google Play services can resolve some errors it detects.
-         * If the error has a resolution, try sending an Intent to
-         * start a Google Play services activity that can resolve
-         * error.
-         */
+
         if (connectionResult.hasResolution()) {
             try {
                 // Start an Activity that tries to resolve the error
@@ -486,8 +491,6 @@ public class MainActivity extends AppCompatActivity
                 jsonResults.append(buff, 0, read);
             }
 
-
-
         } catch (UnsupportedEncodingException e1) {
             e1.printStackTrace();
         } catch (MalformedURLException e1) {
@@ -505,7 +508,7 @@ public class MainActivity extends AppCompatActivity
             Double latitude =  result.getDouble("lat");
             CameraPosition camPos = new CameraPosition.Builder()
                     .target(new LatLng(latitude, longitude))
-                    .zoom(5)
+                    .zoom(17)
                     .build();
             CameraUpdate camUpd3 = CameraUpdateFactory.newCameraPosition(camPos);
             mMap.animateCamera(camUpd3);

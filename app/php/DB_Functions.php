@@ -125,6 +125,26 @@ class DB_Functions {
         $stmt->close();
 		return $user;
     }
+	
+	public function getGeoLocations() {
+		$stmt = $this->conn->prepare("SELECT 
+									GeoLocations.id,
+									GeoLocations.GeoName,
+									GeoLocations.GeoType,
+									GeoLocations.GeoException,
+									GeoLocations.StartDate,
+									GeoLocations.EndDate,
+									GeoLocationMappings.Latitude,
+									GeoLocationMappings.Longitude,
+									GeoLocationMappings.MappingOrder
+									FROM GeoLocations INNER JOIN GeoLocationMappings ON GeoLocationMappings.Locations_id = GeoLocations.id
+									WHERE GeoLocations.isDeleted = 0
+									ORDER BY GeoLocationMappings.MappingOrder");
+        $result = $stmt->execute();
+		$GeoLocations = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+		return $GeoLocations;
+    }
  
     /**
      * Check user is existed or not
