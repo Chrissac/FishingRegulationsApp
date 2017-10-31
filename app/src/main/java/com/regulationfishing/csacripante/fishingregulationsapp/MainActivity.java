@@ -59,18 +59,26 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
 
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
 import java.io.FileReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Dictionary;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
 import info.android.sqlite.helper.DatabaseHelper;
 import info.android.sqlite.helper.users;
 import prefs.CommonFunctions;
+import prefs.GeoMappingsList;
 import prefs.GetGeoLocations;
 import prefs.LoginRequest;
 
@@ -80,6 +88,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Map;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -128,7 +137,6 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
 
         setContentView(R.layout.activity_main);
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
@@ -196,25 +204,47 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onResponse(String response) {
                 try {
-                    //gets the response back from the server
-//                    JSONObject jsonResponse = new JSONObject(response);
-                    JSONArray array = new JSONArray(response);
-
-
                     JSONArray arr = new JSONArray(response);//Response string is here
-                    String test = "";
+                    final List<GeoMappingsList> myList=new ArrayList<GeoMappingsList>();
+                    DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
                     for (int i = 0; i < arr.length(); i++) {
                         JSONArray arr2 = arr.optJSONArray(i);
-                        for (int j = 0; j < arr2.length(); j++) {
-                            test =  arr2.get(j).toString();
-
-                        }
+                        GeoMappingsList newItem;
+                        newItem = new GeoMappingsList(Integer.parseInt(arr2.get(0).toString()),
+                                                                      arr2.get(1).toString(),
+                                                                      arr2.get(2).toString(),
+                                                                      arr2.get(3).toString(),
+                                                                      dateFormat.parse(arr2.get(4).toString()),
+                                                                      dateFormat.parse(arr2.get(5).toString()),
+                                                                      Float.parseFloat(arr2.get(6).toString()),
+                                                                      Float.parseFloat(arr2.get(7).toString()),
+                                                                      Integer.parseInt(arr2.get(8).toString()));
+                        myList.add(newItem);
                     }
+                    //create a new thread to populate polygons
+//                    Thread t1 = new Thread(new Runnable() {
+//                        public void run()
+//                        {
+//                            for (int i = 0; i < myList.size(); i++) {
+//
+//                            }
+//                        }});
+//                    t1.start();
+
+                    Polyline polyline1 = mMap.addPolyline(new PolylineOptions()
+                            .clickable(true)
+                            .add(
+                                    new LatLng(myList.get(0).Latitude, myList.get(0).Longitude),
+                                    new LatLng(myList.get(1).Latitude, myList.get(1).Longitude),
+                                    new LatLng(myList.get(2).Latitude, myList.get(2).Longitude)
+                            ));
 
                 } catch (JSONException e) {
                     e.printStackTrace();
+                } catch (ParseException e) {
+                    e.printStackTrace();
                 }
-             }
+            }
         };
         GetGeoLocations geoRequest = new GetGeoLocations(responseListener);
         RequestQueue queue = Volley.newRequestQueue(MainActivity.this);
