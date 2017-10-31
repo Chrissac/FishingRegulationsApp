@@ -127,6 +127,7 @@ class DB_Functions {
     }
 	
 	public function getGeoLocations() {
+		
 		$stmt = $this->conn->prepare("SELECT 
 									GeoLocations.id,
 									GeoLocations.GeoName,
@@ -141,10 +142,13 @@ class DB_Functions {
 									WHERE GeoLocations.isDeleted = 0
 									ORDER BY GeoLocationMappings.MappingOrder");
         $result = $stmt->execute();
-		$GeoLocations = $stmt->get_result()->fetch_assoc();
+		$GeoLocations = $stmt->get_result()->fetch_all();
         $stmt->close();
 		return $GeoLocations;
+
+		
     }
+
  
     /**
      * Check user is existed or not

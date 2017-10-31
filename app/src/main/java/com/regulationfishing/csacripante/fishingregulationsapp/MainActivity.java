@@ -197,27 +197,24 @@ public class MainActivity extends AppCompatActivity
             public void onResponse(String response) {
                 try {
                     //gets the response back from the server
-                    JSONObject jsonResponse = new JSONObject(response);
+//                    JSONObject jsonResponse = new JSONObject(response);
+                    JSONArray array = new JSONArray(response);
 
 
-                        JSONObject geoMappingsJSON = jsonResponse.getJSONObject("GeoLocations");
-                        JSONArray array = jsonResponse.names();
+                    JSONArray arr = new JSONArray(response);//Response string is here
+                    String test = "";
+                    for (int i = 0; i < arr.length(); i++) {
+                        JSONArray arr2 = arr.optJSONArray(i);
+                        for (int j = 0; j < arr2.length(); j++) {
+                            test =  arr2.get(j).toString();
 
-                    Iterator<?> keys = jsonResponse.keys();
-                    while(keys.hasNext() ) {
-                        String key = (String)keys.next();
-                        if ( jsonResponse.get(key) instanceof JSONObject ) {
-                            JSONObject xx = new JSONObject(jsonResponse.get(key).toString());
-                            Log.d("res1",xx.getString("something"));
-                            Log.d("res2",xx.getString("something2"));
                         }
                     }
-
 
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-            }
+             }
         };
         GetGeoLocations geoRequest = new GetGeoLocations(responseListener);
         RequestQueue queue = Volley.newRequestQueue(MainActivity.this);
