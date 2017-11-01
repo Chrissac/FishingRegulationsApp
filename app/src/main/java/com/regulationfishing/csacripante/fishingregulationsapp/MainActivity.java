@@ -9,6 +9,7 @@ import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 
+import android.graphics.Color;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
@@ -30,6 +31,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.textservice.SpellCheckerInfo;
 import android.widget.AutoCompleteTextView;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -59,6 +61,8 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
 
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polygon;
+import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.squareup.picasso.Picasso;
@@ -70,6 +74,7 @@ import java.net.URL;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Collection;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -89,6 +94,7 @@ import java.net.MalformedURLException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Map;
+
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -210,6 +216,7 @@ public class MainActivity extends AppCompatActivity
                     for (int i = 0; i < arr.length(); i++) {
                         JSONArray arr2 = arr.optJSONArray(i);
                         GeoMappingsList newItem;
+
                         newItem = new GeoMappingsList(Integer.parseInt(arr2.get(0).toString()),
                                                                       arr2.get(1).toString(),
                                                                       arr2.get(2).toString(),
@@ -221,23 +228,25 @@ public class MainActivity extends AppCompatActivity
                                                                       Integer.parseInt(arr2.get(8).toString()));
                         myList.add(newItem);
                     }
-                    //create a new thread to populate polygons
-//                    Thread t1 = new Thread(new Runnable() {
-//                        public void run()
-//                        {
-//                            for (int i = 0; i < myList.size(); i++) {
-//
-//                            }
-//                        }});
-//                    t1.start();
 
-                    Polyline polyline1 = mMap.addPolyline(new PolylineOptions()
-                            .clickable(true)
-                            .add(
-                                    new LatLng(myList.get(0).Latitude, myList.get(0).Longitude),
-                                    new LatLng(myList.get(1).Latitude, myList.get(1).Longitude),
-                                    new LatLng(myList.get(2).Latitude, myList.get(2).Longitude)
-                            ));
+
+                    ArrayList<LatLng> list = new ArrayList<LatLng>();
+                    int id = myList.get(0).GeoId;
+                    for (int i = 0; i < myList.size(); i++) {
+                      if(id == myList.get(i).GeoId) {
+                          list.add(new LatLng(myList.get(i).Latitude, myList.get(i).Longitude));
+                      }
+                      if(id != myList.get(i).GeoId || i== myList.size()-1) {
+                          PolygonOptions opts=new PolygonOptions();;
+                          for (LatLng location : list) {
+                              opts.add(location);
+                          }
+                          Polygon polygon = mMap.addPolygon(opts.strokeColor(Color.BLUE).fillColor(Color.RED));
+                          list.clear();
+                          id = myList.get(i).GeoId;
+                      }
+                   }
+                    //mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(myList.get(0).Latitude, myList.get(0).Longitude), 8));
 
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -346,19 +355,6 @@ public class MainActivity extends AppCompatActivity
                     googleMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker").snippet("Snippet"));
 
                     googleMap.setMyLocationEnabled(true);
-
-
-                    googleMap.addMarker(new MarkerOptions()
-                            .position(new LatLng(-33.87365, 151.20689))
-                            .title("Sydney")
-                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.fishingpole))
-                            .snippet("Population: dont know google it."));
-
-                    googleMap.addMarker(new MarkerOptions()
-                            .position(new LatLng(-27.47093, 153.0235))
-                            .title("Sydney")
-                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.fishingpole))
-                            .snippet("Population: dont know google it."));
 
 
                     if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION)
@@ -535,7 +531,7 @@ public class MainActivity extends AppCompatActivity
             Double latitude =  result.getDouble("lat");
             CameraPosition camPos = new CameraPosition.Builder()
                     .target(new LatLng(latitude, longitude))
-                    .zoom(17)
+                    .zoom(10)
                     .build();
             CameraUpdate camUpd3 = CameraUpdateFactory.newCameraPosition(camPos);
             mMap.animateCamera(camUpd3);
