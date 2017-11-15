@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class GetGeoLocations extends StringRequest {
-    private static final String GeoRequest_REQUEST_URL = "http://fishingregulationdb.000webhostapp.com/GetGeoLocations.php";
+    private static final String GeoRequest_REQUEST_URL = "http://www.catchandrelease.xyz/GetGeoLocations.php";
     private Map<String, String> params;
 
     public GetGeoLocations( Response.Listener<String> listener) {

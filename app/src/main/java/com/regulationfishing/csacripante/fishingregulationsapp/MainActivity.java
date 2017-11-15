@@ -33,6 +33,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.textservice.SpellCheckerInfo;
 import android.widget.AutoCompleteTextView;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -114,7 +115,7 @@ public class MainActivity extends AppCompatActivity
         OnItemClickListener,
         GoogleApiClient.OnConnectionFailedListener,
         LocationListener,
-        OnMapReadyCallback {
+        OnMapReadyCallback, View.OnClickListener {
 
     GoogleMap gMap;
     Context context;
@@ -138,7 +139,7 @@ public class MainActivity extends AppCompatActivity
     private static final String OUT_JSON = "/json";
     private static final String API_KEY = "AIzaSyD7bf9O7_kTD1BuNVM9X4Zk5OKTfvAJRq0";
     private  static  ArrayList locationPlaces = null;
-
+    EditText autoCompleteText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -170,10 +171,14 @@ public class MainActivity extends AppCompatActivity
                 .addOnConnectionFailedListener(this)
                 .addApi(LocationServices.API)
                 .build();
-        AutoCompleteTextView autoCompView = (AutoCompleteTextView) findViewById(R.id.autoCompleteTextView);
 
+        //set up onClickListener
+        AutoCompleteTextView autoCompView = (AutoCompleteTextView) findViewById(R.id.autoCompleteTextView);
         autoCompView.setAdapter(new GooglePlacesAutocompleteAdapter(this, R.layout.list_item));
         autoCompView.setOnItemClickListener(this);
+
+        autoCompleteText = (EditText)  findViewById(R.id.autoCompleteTextView);
+        autoCompleteText.setOnClickListener(this);
 
         List<users> allUsers =    db.getAllUsers();
         for (users userObj : allUsers) {
@@ -216,7 +221,6 @@ public class MainActivity extends AppCompatActivity
                     for (int i = 0; i < arr.length(); i++) {
                         JSONArray arr2 = arr.optJSONArray(i);
                         GeoMappingsList newItem;
-
                         newItem = new GeoMappingsList(Integer.parseInt(arr2.get(0).toString()),
                                                                       arr2.get(1).toString(),
                                                                       arr2.get(2).toString(),
@@ -228,8 +232,6 @@ public class MainActivity extends AppCompatActivity
                                                                       Integer.parseInt(arr2.get(8).toString()));
                         myList.add(newItem);
                     }
-
-
                     ArrayList<LatLng> list = new ArrayList<LatLng>();
                     int id = myList.get(0).GeoId;
                     for (int i = 0; i < myList.size(); i++) {
@@ -242,12 +244,11 @@ public class MainActivity extends AppCompatActivity
                               opts.add(location);
                           }
                           Polygon polygon = mMap.addPolygon(opts.strokeColor(Color.BLUE).fillColor(Color.RED));
+                          polygon.setTag(myList.get(i).GeoException.toString());
                           list.clear();
                           id = myList.get(i).GeoId;
                       }
                    }
-                    //mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(myList.get(0).Latitude, myList.get(0).Longitude), 8));
-
                 } catch (JSONException e) {
                     e.printStackTrace();
                 } catch (ParseException e) {
@@ -269,14 +270,11 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-
         int id = item.getItemId();
-
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             return true;
         }
-
         return super.onOptionsItemSelected(item);
     }
 
@@ -345,20 +343,16 @@ public class MainActivity extends AppCompatActivity
         // Do a null check to confirm that we have not already instantiated the map.
         if (mMap == null) {
             // Try to obtain the map from the SupportMapFragment.
-            ((SupportMapFragment) getSupportFragmentManager()
-                    .findFragmentById(R.id.mapViewMain)).getMapAsync(new OnMapReadyCallback() {
+            ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.mapViewMain)).getMapAsync(new OnMapReadyCallback() {
 
                 @Override
                 public void onMapReady(final GoogleMap googleMap) {
-
                     gMap = googleMap;
                     googleMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker").snippet("Snippet"));
-
                     googleMap.setMyLocationEnabled(true);
-
-
-                    if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION)
-                            == PackageManager.PERMISSION_GRANTED) {
+                    gMap = googleMap;
+                    mMap = googleMap;
+                    if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                         googleMap.setMyLocationEnabled(true);
                         Location userLocation = googleMap.getMyLocation();
                         LatLng myLocation = null;
@@ -370,11 +364,6 @@ public class MainActivity extends AppCompatActivity
                         } else {
                             // Show rationale and request permission.
                         }
-
-                        gMap = googleMap;
-                        mMap = googleMap;
-
-
                     }
                 }
             });
@@ -391,13 +380,11 @@ public class MainActivity extends AppCompatActivity
 
     private void handleNewLocation(Location location) {
         Log.d(TAG, location.toString());
-
     }
 
     @Override
     public void onConnected(Bundle bundle) {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-
             return;
         }
         Location location = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
@@ -421,20 +408,11 @@ public class MainActivity extends AppCompatActivity
             try {
                 // Start an Activity that tries to resolve the error
                 connectionResult.startResolutionForResult(this, CONNECTION_FAILURE_RESOLUTION_REQUEST);
-                /*
-                 * Thrown if Google Play services canceled the original
-                 * PendingIntent
-                 */
             } catch (IntentSender.SendIntentException e) {
                 // Log the error
                 e.printStackTrace();
             }
         } else {
-            /*
-             * If no resolution is available, display a dialog to the
-             * user with the error.
-             */
-            //Log.i(TAG, "Location services connection failed with code " + connectionResult.getErrorCode());
         }
     }
 
@@ -488,9 +466,10 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onItemClick(AdapterView adapterView, View view, int position, long id) {
+
         String str = (String) adapterView.getItemAtPosition(position);
         str = (String)locationPlaces.get(position).toString();
-        Toast.makeText(this, str, Toast.LENGTH_SHORT).show();
+
         CommonFunctions pl = new CommonFunctions();
 
         ArrayList<Double> list = new ArrayList<Double>();
@@ -499,8 +478,6 @@ public class MainActivity extends AppCompatActivity
         HttpURLConnection conn = null;
         StringBuilder jsonResults = new StringBuilder();
         try {
-
-
             StringBuilder sb = new StringBuilder(PLACES_API_BASE + TYPE_DETAIL + OUT_JSON);
             sb.append("?placeid=" + URLEncoder.encode(str, "utf8"));
             sb.append("&key=" + API_KEY);
@@ -521,7 +498,6 @@ public class MainActivity extends AppCompatActivity
         } catch (IOException e1) {
             e1.printStackTrace();
         }
-
         try {
 
             JSONObject jsonObj = new JSONObject(jsonResults.toString());
@@ -531,15 +507,20 @@ public class MainActivity extends AppCompatActivity
             Double latitude =  result.getDouble("lat");
             CameraPosition camPos = new CameraPosition.Builder()
                     .target(new LatLng(latitude, longitude))
-                    .zoom(10)
+                    .zoom(8)
                     .build();
             CameraUpdate camUpd3 = CameraUpdateFactory.newCameraPosition(camPos);
             mMap.animateCamera(camUpd3);
         } catch (JSONException e) {
             ///Log.e(LOG_TAG, "Cannot process JSON results", e);
         }
+    }
 
-
+    @Override
+    public void onClick(View view) {
+        if(autoCompleteText.getText().toString().equals("Please enter your place")){
+            autoCompleteText.setText("");
+        }
     }
 
     class GooglePlacesAutocompleteAdapter extends ArrayAdapter implements Filterable {
@@ -567,7 +548,6 @@ public class MainActivity extends AppCompatActivity
                     if (constraint != null) {
                         // Retrieve the autocomplete results.
                         resultList = autocomplete(constraint.toString());
-
                         // Assign the data to the FilterResultsfilterResults.values = resultList;
                         filterResults.count = resultList.size();
                     }

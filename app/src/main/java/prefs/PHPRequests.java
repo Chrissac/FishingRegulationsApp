@@ -8,7 +8,7 @@ import java.util.Map;
 import prefs.Utils.*;
 
 public class PHPRequests extends StringRequest {
-    private static final String RECOVERY_REQUEST_URL = "http://fishingregulationdb.000webhostapp.com/ForgotPasswordRecoveryCode.php";
+    private static final String RECOVERY_REQUEST_URL = "http://www.catchandrelease.xyz/ForgotPasswordRecoveryCode.php";
     private Map<String, String> params;
 
     public PHPRequests(String email, String recoverycode,String password, String REQUEST_URL, Response.Listener<String> listener) {
