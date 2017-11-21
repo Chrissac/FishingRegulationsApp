@@ -8,6 +8,7 @@ android {
         minSdkVersion 19
         targetSdkVersion 26
         versionCode 1
+        multiDexEnabled true
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
@@ -31,7 +32,7 @@ dependencies {
     compile files('libs/activation.jar')
     compile files('libs/additionnal.jar')
     compile files('libs/mailapi.jar')
-
+    compile 'com.android.support:multidex:1.0.1'
     compile 'com.android.support:appcompat-v7:26.+'
     compile 'com.android.support:design:26.+'
     compile 'com.facebook.android:facebook-android-sdk:4.16.1'
