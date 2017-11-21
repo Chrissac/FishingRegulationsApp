@@ -10,6 +10,7 @@ import android.content.pm.PackageManager;
 import android.content.res.Resources;
 
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
@@ -55,6 +56,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 
 import com.google.android.gms.maps.model.CameraPosition;
@@ -141,6 +143,7 @@ public class MainActivity extends AppCompatActivity
     private static final String API_KEY = "AIzaSyD7bf9O7_kTD1BuNVM9X4Zk5OKTfvAJRq0";
     private  static  ArrayList locationPlaces = null;
     EditText autoCompleteText;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -247,12 +250,17 @@ public class MainActivity extends AppCompatActivity
                           //set polygon
                           Polygon polygon = mMap.addPolygon(opts.strokeColor(Color.RED).fillColor(0x7FFF0000));
                           polygon.setTag(myList.get(i).GeoException.toString());
-                          list.clear();
+
                           //set marker
-                          mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
+                          LatLng polyCentroid = CommonFunctions.Centroid(list);
+                          BitmapDescriptor iconMarker = BitmapDescriptorFactory.fromResource(R.drawable.marker_icon);
+                          mMap.addMarker(new MarkerOptions()
+                                             .position(polyCentroid)
+                                             .title("")
+                                             .icon(iconMarker));
 
 
-
+                          list.clear();
                           id = myList.get(i).GeoId;
                       }
                    }

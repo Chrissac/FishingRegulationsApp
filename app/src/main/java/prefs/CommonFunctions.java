@@ -97,7 +97,7 @@ public class CommonFunctions {
         return area;
     };
 
-    public LatLng Centroid (ArrayList<LatLng> pts) {
+    public static LatLng Centroid (ArrayList<LatLng> pts) {
         int nPts = pts.size();
         double x=0; double y=0;
         double f;
