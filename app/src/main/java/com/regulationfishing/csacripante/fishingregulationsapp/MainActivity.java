@@ -107,6 +107,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Filter;
 import android.widget.Filterable;
 
+import static android.R.attr.value;
 import static prefs.CommonFunctions.PassWordMd5;
 
 public class MainActivity extends AppCompatActivity
@@ -243,9 +244,15 @@ public class MainActivity extends AppCompatActivity
                           for (LatLng location : list) {
                               opts.add(location);
                           }
-                          Polygon polygon = mMap.addPolygon(opts.strokeColor(Color.BLUE).fillColor(Color.RED));
+                          //set polygon
+                          Polygon polygon = mMap.addPolygon(opts.strokeColor(Color.RED).fillColor(0x7FFF0000));
                           polygon.setTag(myList.get(i).GeoException.toString());
                           list.clear();
+                          //set marker
+
+
+
+
                           id = myList.get(i).GeoId;
                       }
                    }
@@ -347,10 +354,7 @@ public class MainActivity extends AppCompatActivity
 
                 @Override
                 public void onMapReady(final GoogleMap googleMap) {
-                    gMap = googleMap;
-                    googleMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker").snippet("Snippet"));
                     googleMap.setMyLocationEnabled(true);
-                    gMap = googleMap;
                     mMap = googleMap;
                     if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                         googleMap.setMyLocationEnabled(true);
