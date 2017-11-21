@@ -81,7 +81,7 @@ public class CommonFunctions {
     }
 
 
-    private double area(ArrayList<LatLng> arr) {
+    private static double area(ArrayList<LatLng> arr) {
         double area=0;
         int nPts = arr.size();
         int j=nPts-1;
