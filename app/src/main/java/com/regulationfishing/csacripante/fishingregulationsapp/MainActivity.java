@@ -86,7 +86,7 @@ import info.android.sqlite.helper.users;
 import prefs.CommonFunctions;
 import prefs.GeoMappingsList;
 import prefs.GetGeoLocations;
-import prefs.LoginRequest;
+
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -249,7 +249,7 @@ public class MainActivity extends AppCompatActivity
                           polygon.setTag(myList.get(i).GeoException.toString());
                           list.clear();
                           //set marker
-
+                          mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
 
 
 
@@ -379,7 +379,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void setUpMap() {
-        mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
+        //mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
     }
 
     private void handleNewLocation(Location location) {

@@ -1,6 +1,9 @@
 package prefs;
 
+import android.graphics.Point;
 import android.os.AsyncTask;
+
+import com.google.android.gms.maps.model.LatLng;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -77,4 +80,39 @@ public class CommonFunctions {
         return uuid;
     }
 
+
+    private double area(ArrayList<LatLng> arr) {
+        double area=0;
+        int nPts = arr.size();
+        int j=nPts-1;
+        LatLng p1; LatLng p2;
+        for (int i=0;i<nPts;j=i++) {
+
+            p1=arr.get(i); p2=arr.get(j);
+            area+=p1.latitude*p2.longitude;
+            area-=p1.longitude*p2.latitude;
+        }
+        area/=2;
+
+        return area;
+    };
+
+    public LatLng Centroid (ArrayList<LatLng> pts) {
+        int nPts = pts.size();
+        double x=0; double y=0;
+        double f;
+        int j=nPts-1;
+        LatLng p1; LatLng p2;
+
+        for (int i=0;i<nPts;j=i++) {
+            p1=pts.get((i)); p2=pts.get(j);
+            f=p1.latitude*p2.longitude-p2.latitude*p1.longitude;
+            x+=(p1.latitude+p2.latitude)*f;
+            y+=(p1.longitude+p2.longitude)*f;
+        }
+
+        f=area(pts)*6;
+
+        return new LatLng(x/f, y/f);
+    };
 }
