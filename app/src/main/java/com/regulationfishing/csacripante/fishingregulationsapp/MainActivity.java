@@ -254,14 +254,16 @@ public class MainActivity extends AppCompatActivity
                           //set marker
                           LatLng polyCentroid = CommonFunctions.Centroid(list);
                           BitmapDescriptor iconMarker = BitmapDescriptorFactory.fromResource(R.drawable.marker_icon);
-                          mMap.addMarker(new MarkerOptions()
-                                             .position(polyCentroid)
-                                             .title("")
-                                             .icon(iconMarker));
+
 
 
                           list.clear();
                           id = myList.get(i).GeoId;
+                          mMap.addMarker(new MarkerOptions()
+                                  .position(polyCentroid)
+                                  .title(myList.get(i-1).GeoName)
+                                  .snippet(myList.get(i-1).GeoException)
+                                  .icon(iconMarker));
                       }
                    }
                 } catch (JSONException e) {
